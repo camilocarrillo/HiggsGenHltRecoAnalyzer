@@ -16,7 +16,7 @@ void make_up(){
   int Nhltpaths=442;
   
   //TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/higgs/yy/hlt/CMSSW_5_3_2_patch4/src/genAnalyzer/GenAnalyzer/genAnalyzer.root");
-  TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/workspace/higgs/yy/-mass-/genAnalyzer.root");
+  TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/workspace/higgs/yy/90/genAnalyzer.root");
   //TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/workspace/higgs/yy/all.root");
 
   cout<<"getting the histo"<<endl;
