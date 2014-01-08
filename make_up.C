@@ -1,11 +1,12 @@
-
+#include <iostream>
 #include "Riostream.h"
 #include <fstream>
 #include <iomanip>
 #include <vector>
 #include <string>
 #include <TEfficiency.h>
-
+//#define Maxselection 2
+//#define Nhltpaths 442
 
 void make_up(){
   gROOT->Reset();
@@ -13,33 +14,44 @@ void make_up(){
   gStyle->SetPalette(1);
   gStyle->SetPaintTextFormat("2.2f");
   
-  int Nhltpaths=442;
-  
   //TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/higgs/yy/hlt/CMSSW_5_3_2_patch4/src/genAnalyzer/GenAnalyzer/genAnalyzer.root");
-  TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/workspace/higgs/yy/90/genAnalyzer.root");
+  TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/higgs/yy/hlt/CMSSW_5_3_11/src/HiggsGenHltRecoAnalyzer/HiggsGenHltRecoAnalyzer/test/genAnalyzer.root");
   //TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/workspace/higgs/yy/all.root");
 
-  cout<<"getting the histo"<<endl;
-  
-  TH1F * numerator = (TH1F*)(theFile->Get("numerator"));
-  TH1F * denominator = (TH1F*)(theFile->Get("denominator"));
-  cout<<"creating canvas"<<endl;
-  TCanvas * Ca0 = new TCanvas("Ca0","bit0",1200,800);
-  Ca0->cd();
-  
   system("mkdir gen");
   system("mkdir hlt");
 
+  cout<<"creating canvas"<<endl;
+  TCanvas * Ca0 = new TCanvas("Ca0","bit0",1200,800);
+  Ca0->cd();
 
+  Draw1D("ptLead","p_{T} (GeV)","gen/",theFile);
+  Draw1D("ptTrail","p_{T} (GeV)","gen/",theFile);
+  Draw1D("massDiphoton","mass_{#gamma #gamma} (GeV)","gen/",theFile);
+  Draw1D("massHiggs","mass_{H} (GeV)","gen/",theFile);
+  Draw1D("higgsEta","#eta_{H} (GeV)","gen/",theFile);
+  Draw1D("higgsPhi","#phi_{H} (GeV)","gen/",theFile);
+  Draw1D("higgsPt","#p (GeV)","gen/",theFile);
+  Draw1D("numerator","HLT bit","hlt",theFile);
+  Draw1D("denominator","HLT bit","hlt",theFile);
+
+  cout<<"creating canvas"<<endl;
+  TCanvas * Ca0 = new TCanvas("Ca0","bit0",1200,800);
+  Ca0->cd();
+  Ca0->SetLogy();
+  Draw1D("higgsP","#p (GeV)","gen/",theFile); 
+  
   //all hlt bits efficiency plot
+  TH1F * numerator = (TH1F*)(theFile->Get("numerator_1"));//We just plot the efficiency w.r.t the last selection
+  TH1F * denominator = (TH1F*)(theFile->Get("denominator_1"));
   if(TEfficiency::CheckConsistency(*numerator,*denominator)){
     TEfficiency* pEff = new TEfficiency(*numerator,*denominator);
-    binomialEfficiency1D(pEff,Nhltpaths);
+    binomialEfficiency1D(pEff);
   }
   cout<<"cleaning canvas"<<endl;
   Ca0->SaveAs("hlt/all_hlt_eff.png");
   Ca0->Clear();
-
+  
   //turnon curve
   //Interesting bits
   
@@ -50,60 +62,18 @@ void make_up(){
   
   for(int k=0;k<38;k++){
     //cout<<k<<endl;
-    TEfficiency * Effbit = (TEfficiency*) (theFile->Get(("bin"+interesting_bits[k]).c_str()));
+    TEfficiency * Effbit = (TEfficiency*) (theFile->Get(("bin"+interesting_bits[k]+"_1").c_str()));
     if(!Effbit) cout<<"Effbit not found"<<endl;
     binomialEfficiency2D(Effbit);
     Ca0->SaveAs(("hlt/bit_"+interesting_bits[k]+"_"+Effbit->GetTitle()+"_efficiency.png").c_str());
     Ca0->Clear();
   }
 
-  TEfficiency * EffbitOR = (TEfficiency*) (theFile->Get("Eff_bit_194_195_205"));
+  TEfficiency * EffbitOR = (TEfficiency*) (theFile->Get("Eff_bit_194_195_205_1"));
   if(!EffbitOR) cout<<"EffbitOR not found"<<endl;
   binomialEfficiency2D(EffbitOR);
   Ca0->SaveAs("hlt/bitOR_efficiency.png");
   Ca0->Clear();
-
-  TH1F * ptLeadhisto = (TH1F*)(theFile->Get("ptLeadhisto"));
-  ptLeadhisto->Draw(); 
-  ptLeadhisto->SetFillColor(kBlue);(); 
-  ptLeadhisto->SetXTitle("p_{T} (GeV)");
-  Ca0->SaveAs("gen/ptLeadhisto.png");Ca0->Clear();  
-
-  TH1F * ptTrailhisto = (TH1F*)(theFile->Get("ptTrailhisto"));
-  ptTrailhisto->Draw(); 
-  ptTrailhisto->SetFillColor(kBlue);
-  ptTrailhisto->SetXTitle("p_{T} (GeV)");
-  Ca0->SaveAs("gen/ptTrailhisto.png");Ca0->Clear();  
-
-  TH1F * massDiphotonhisto = (TH1F*)(theFile->Get("massDiphotonhisto"));
-  massDiphotonhisto->Draw(); 
-  massDiphotonhisto->SetFillColor(kBlue);
-  massDiphotonhisto->SetXTitle("mass_{#gamma #gamma} (GeV)");
-  Ca0->SaveAs("gen/massDiphotonhisto.png");Ca0->Clear();  
-
-  TH1F * massHiggshisto = (TH1F*)(theFile->Get("massHiggshisto"));
-  massHiggshisto->Draw(); 
-  massHiggshisto->SetFillColor(kBlue);
-  massHiggshisto->SetXTitle("mass_{H} (GeV)");
-  Ca0->SaveAs("gen/massHiggshisto.png");Ca0->Clear();  
- 
-  TH1F * higgsEtaHist = (TH1F*)(theFile->Get("higgsEtaHist"));
-  higgsEtaHist->Draw(); 
-  higgsEtaHist->SetFillColor(kBlue); 
-  higgsEtaHist->SetXTitle("#eta_{H}");
-  Ca0->SaveAs("gen/higgsEtaHist.png");Ca0->Clear();  
-
-  TH1F * higgsPhiHist = (TH1F*)(theFile->Get("higgsPhiHist"));
-  higgsPhiHist->Draw(); 
-  higgsPhiHist->SetFillColor(kBlue);
-  higgsPhiHist->SetXTitle("#phi_{H}");
-  Ca0->SaveAs("gen/higgsPhiHist.png");Ca0->Clear();  
-  
-  TH1F * higgsPHist = (TH1F*)(theFile->Get("higgsPHist"));
-  higgsPHist->Draw();
-  higgsPHist->SetFillColor(kBlue);
-  higgsPHist->SetXTitle("p (GeV)");
-  Ca0->SaveAs("gen/higgsPHist.png");Ca0->Clear();
 
   TH2F * phi1phi2 = (TH2F*)(theFile->Get("phi1phi2"));
   phi1phi2->Draw("colz");
@@ -123,26 +93,6 @@ void make_up(){
   pt1pt2->SetYTitle("p_{T} Trail (GeV)");
   Ca0->SaveAs("gen/pt1pt2.png");Ca0->Clear();
   
-  TH1F * numerator = (TH1F*)(theFile->Get("numerator"));
-  numerator->Draw();
-  numerator->SetFillColor(kBlue);
-  numerator->SetXTitle("HLT bit");
-  Ca0->SaveAs("hlt/numerator.png");Ca0->Clear();
-
-  TH1F * denominator = (TH1F*)(theFile->Get("denominator"));
-  denominator->Draw();
-  denominator->SetFillColor(kBlue);
-  denominator->SetXTitle("#HLT bit");
-  Ca0->SaveAs("hlt/denominator.png");Ca0->Clear();
-
-  Ca0->SetLogy();
-
-  TH1F * higgsPtHist = (TH1F*)(theFile->Get("higgsPtHist"));
-  higgsPtHist->Draw();
-  higgsPtHist->SetFillColor(kBlue);
-  higgsPtHist->SetXTitle("p_{T} (GeV)");
-  Ca0->SaveAs("gen/higgsPtHist.png");Ca0->Clear();
-
   exit(0);
 }
 
@@ -168,14 +118,14 @@ void binomialEfficiency2D(TEfficiency * teff){
   efficiency->Draw("colztextE");
 }
 
-void binomialEfficiency1D(TEfficiency * teff,int Nhltpaths){
+void binomialEfficiency1D(TEfficiency * teff){
   TH1D numerator = (TH1D)teff->GetPassedHistogram();
   TH1D denominator = (TH1D)teff->GetTotalHistogram();
-  TH1F * efficiency = new TH1F ("efficiency","hlt bit efficiency %",Nhltpaths,-0.5,Nhltpaths-0.5);
+  TH1F * efficiency = new TH1F ("efficiency","hlt bit efficiency %",442  ,-0.5,442  -0.5);
   efficiency->SetXTitle("HLT bit");
   efficiency->SetYTitle("#epsilon");
   float eff,err;
-  for(int j=0;j<=Nhltpaths;j++){
+  for(int j=0;j<=442  ;j++){
     if(denominator.GetBinContent(j)!=0){
       eff = numerator.GetBinContent(j)/denominator.GetBinContent(j);
       err = sqrt(eff*(1-eff)/denominator.GetBinContent(j));
@@ -190,4 +140,20 @@ void binomialEfficiency1D(TEfficiency * teff,int Nhltpaths){
   efficiency->SetMarkerSize(0.5);
 }
       
-
+void Draw1D(string savedname,string theXtitle,string folder,TFile * theFile){
+  TH1F * histoArray[2  ];
+  for(int selection=0;selection<2  ;selection++){ //Loop over the different histograms
+    //std::string histo = std::to_string(selection);
+    char histo[20];
+    sprintf(histo,"%d",selection);
+    cout<<savedname+"_"+histo<<endl;
+    histoArray[selection] = (TH1F*)(theFile->Get((savedname+"_"+histo).c_str()));
+    if(selection==0) histoArray[selection]->Draw();
+    else histoArray[selection]->Draw("same");
+    histoArray[selection]->SetFillColor(7+selection);
+    histoArray[selection]->SetXTitle(theXtitle.c_str());
+  }
+  cout<<
+  Ca0->SaveAs((folder+savedname+".png").c_str());
+  Ca0->Clear();
+}

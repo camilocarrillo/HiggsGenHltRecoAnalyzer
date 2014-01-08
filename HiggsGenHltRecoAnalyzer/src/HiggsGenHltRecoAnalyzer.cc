@@ -234,26 +234,26 @@ void HiggsGenHltRecoAnalyzer::beginJob(){
 
   for(selection=0;selection<Maxselection;selection++){ //Loop over the different histograms
     std::string histo = std::to_string(selection);
-    ptLeadhisto[selection] = new TH1F (("ptLeadhisto_"+histo).c_str(),("ptLeadhisto_"+histo).c_str(),100,0.,150.);
-    ptTrailhisto[selection] = new TH1F (("ptTrailhisto_"+histo).c_str(),("ptTrailhisto_"+histo).c_str(),100,0.,150.);
-    massDiphotonhisto[selection] = new TH1F (("massDiphotonhisto_"+histo).c_str(),("massDiphotonhisto_"+histo).c_str(),100,80.,150.);
-    massHiggshisto[selection]= new TH1F (("massHiggshisto_"+histo).c_str(),("massHiggshisto_"+histo).c_str(),100,80.,170.);
-    higgsEtaHist[selection] = new TH1F (("higgsEtaHist_histo"+histo).c_str(),("GEN Higgs #eta_histo"+histo).c_str(),100,-5,5);
-    higgsPhiHist[selection] = new TH1F (("higgsPhiHist_histo"+histo).c_str(),("GEN Higgs #phi_histo"+histo).c_str(),180,-3.15,3.15);
-    higgsPHist[selection] = new TH1F (("higgsPHist_histo"+histo).c_str(),("GEN Higgs P_histo"+histo).c_str(),500,0,1200);
-    higgsPtHist[selection] = new TH1F (("higgsPtHist_histo"+histo).c_str(),("GEN Higgs P_{T}_histo"+histo).c_str(),500,0,1200);  
-    numerator[selection] = new TH1F (("numerator_histo"+histo).c_str(),("numerator_histo"+histo).c_str(),Nhltpaths,-0.5,Nhltpaths-0.5);
-    denominator[selection] = new TH1F (("denominator_histo"+histo).c_str(),("denominator_histo"+histo).c_str(),Nhltpaths,-0.5,Nhltpaths-0.5);
+    ptLeadhisto[selection] = new TH1F (("ptLead_"+histo).c_str(),("ptLeadhisto_"+histo).c_str(),100,0.,150.);
+    ptTrailhisto[selection] = new TH1F (("ptTrail_"+histo).c_str(),("ptTrailhisto_"+histo).c_str(),100,0.,150.);
+    massDiphotonhisto[selection] = new TH1F (("massDiphoton_"+histo).c_str(),("massDiphotonhisto_"+histo).c_str(),100,80.,150.);
+    massHiggshisto[selection]= new TH1F (("massHiggs_"+histo).c_str(),("massHiggshisto_"+histo).c_str(),100,80.,170.);
+    higgsEtaHist[selection] = new TH1F (("higgsEta_"+histo).c_str(),("GEN Higgs #eta_histo"+histo).c_str(),100,-5,5);
+    higgsPhiHist[selection] = new TH1F (("higgsPhi_"+histo).c_str(),("GEN Higgs #phi_histo"+histo).c_str(),180,-3.15,3.15);
+    higgsPHist[selection] = new TH1F (("higgsP_"+histo).c_str(),("GEN Higgs P_histo"+histo).c_str(),500,0,1200);
+    higgsPtHist[selection] = new TH1F (("higgsPt_"+histo).c_str(),("GEN Higgs P_{T}_histo"+histo).c_str(),500,0,1200);  
+    numerator[selection] = new TH1F (("numerator_"+histo).c_str(),("numerator_histo"+histo).c_str(),Nhltpaths,-0.5,Nhltpaths-0.5);
+    denominator[selection] = new TH1F (("denominator_"+histo).c_str(),("denominator_histo"+histo).c_str(),Nhltpaths,-0.5,Nhltpaths-0.5);
     const Double_t bins[15]={30,35,40,45,50,55,60,65,70,75,80,90,100,110,120};
     char histo_name[128];
     for(int i=0;i<Nhltpaths;i++){
       std::string bin = std::to_string(i);
-      sprintf(histo_name,"bin%s",(bin+"_histo"+histo).c_str());
-      Effbit[i][selection]= new TEfficiency (histo_name,";p_T #gamma Lead;p_T #gamma Trail;#epsilon_histo",14,bins,14,bins);
+      sprintf(histo_name,"bin%s",(bin+"_"+histo).c_str());
+      Effbit[i][selection]= new TEfficiency (histo_name,";p_T #gamma Lead;p_T #gamma Trail;#epsilon_",14,bins,14,bins);
     }
     
-    sprintf(histo_name,"Eff_bit_194_195_205_histo_bin_%d",selection);
-    Eff_bit_194_195_205[selection] = new TEfficiency (histo_name,(";p_T #gamma Lead;p_T #gamma Trail;#epsilon_histo"+histo).c_str(),14,bins,14,bins);
+    sprintf(histo_name,"Eff_bit_194_195_205_%d",selection);
+    Eff_bit_194_195_205[selection] = new TEfficiency (histo_name,(";p_T #gamma Lead;p_T #gamma Trail;#epsilon_"+histo).c_str(),14,bins,14,bins);
   }
   phi1phi2 = new TH2F ("phi1phi2","#phi correlation #gamma #gamma",180,-3.15,3.15,180,-3.15,3.15);
   eta1eta2 = new TH2F ("eta1eta2","#eta correlation #gamma #gamma",100,-5,5,100,-5,5);
