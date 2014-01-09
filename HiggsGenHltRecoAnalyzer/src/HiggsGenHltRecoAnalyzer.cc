@@ -42,9 +42,8 @@
 #include "TCanvas.h"
 #include "TGaxis.h"
 #include "TStyle.h"
-#include "TEfficiency.h"
 #define Nhltpaths 442
-#define Maxselection 3
+#define Maxselection 7
 
 using namespace std;
 using namespace edm;
@@ -65,20 +64,20 @@ class HiggsGenHltRecoAnalyzer : public edm::EDAnalyzer {
       TH1F * ptTrailhisto[Maxselection];
       TH1F * massDiphotonhisto[Maxselection];
       TH1F * massHiggshisto[Maxselection];
-      TH1F * numerator[Maxselection];
-      TH1F * denominator[Maxselection];
+      TH1F * occupancy[Maxselection];
       TH1F * higgsEtaHist[Maxselection];
       TH1F * higgsPhiHist[Maxselection];
       TH1F * higgsPHist[Maxselection];
       TH1F * higgsPtHist[Maxselection];
-      TH2F * phi1phi2;
-      TH2F * eta1eta2;
-      TH2F * pt1pt2;
-      TEfficiency * Effbit[Nhltpaths][Maxselection];
-      TEfficiency * Eff_bit_194_195_205[Maxselection];
+      TH2F * phi1phi2[Maxselection];
+      TH2F * eta1eta2[Maxselection];
+      TH2F * pt1pt2[Maxselection];
+      TH2F * fine_pt1pt2[Maxselection];
+      TH2F * occupancy_bit[Maxselection];
+      bool fillhisto[Maxselection];
       string arrayHLTpathsNames[Nhltpaths];
       bool filled_hlt_names; 
-      bool fillhisto[Maxselection];
+
       int selection;   
    private:
       virtual void beginJob() ;
@@ -160,6 +159,7 @@ HiggsGenHltRecoAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup
 
    
    int hltCount= hltTriggerResultHandle->size();
+   bool fillhisto[Maxselection] = { false };
    bool allHLTResults[Nhltpaths] = { false };
    int bin;
    
@@ -185,9 +185,6 @@ HiggsGenHltRecoAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup
        if (photon0->pdgId()!=22) break; //must be photons
        if (photon1->pdgId()!=22) break; //must be photons
        
-       fillhisto[0]=true;
-       fillhisto[2]=allHLTResults[194]+allHLTResults[195]+allHLTResults[205];
-       
        float ptLead = photon1->pt(); float ptTrail = photon0->pt();
        float phiLead = photon1->phi(); float phiTrail = photon0->phi();
        float etaLead = photon1->eta(); float etaTrail = photon0->eta();
@@ -197,33 +194,35 @@ HiggsGenHltRecoAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup
 	 ptLead = photon0->pt(); ptTrail = photon1->pt();  
 	 phiLead = photon0->phi(); phiTrail = photon1->phi();
 	 etaLead = photon0->eta(); etaTrail = photon1->eta();
+       
        }
+       //Definition for the interesting bits
+       //0 gen
+       //1 acc
+       //2 194
+       //3 195
+       //4 205
+       //5 OR
+       //6 OR*acc
+       fillhisto[0]=true; //all gen level
+       fillhisto[1]=!(etaLead > 2.5 || etaTrail > 2.5 || (etaLead > 1.4442 && etaLead < 1.566) || (etaTrail > 1.4442 && etaTrail < 1.566));
+       fillhisto[2]=allHLTResults[194];
+       fillhisto[3]=allHLTResults[195];
+       fillhisto[4]=allHLTResults[205];
+       fillhisto[5]=fillhisto[2]+fillhisto[3]+fillhisto[4];
+       fillhisto[6]=fillhisto[5]*fillhisto[1];
 
-       if(etaLead > 2.5 || etaTrail > 2.5 
-	  || ( etaLead > 1.4442 && etaTrail < 1.566 ) 
-	  || ( etaTrail > 1.4442 && etaTrail < 1.566)) fillhisto[1]=false;
-       
-       phi1phi2->Fill(phiLead,phiTrail);
-       eta1eta2->Fill(etaLead,etaTrail);
-       pt1pt2->Fill(ptLead,ptTrail);
-       
        for(selection=0;selection<Maxselection;selection++){ //Loop over the different histograms
 	 if(!fillhisto[selection]) break; //all hitograms below will be filled up if the boolean is true.
-	 for(bin = 0 ; bin < hltCount ; bin++){
-	   if(allHLTResults[bin])numerator[selection]->Fill(bin);
-	   denominator[selection]->Fill(bin);
-	 }
+	 phi1phi2[selection]->Fill(phiLead,phiTrail);
+	 eta1eta2[selection]->Fill(etaLead,etaTrail);
+	 pt1pt2[selection]->Fill(ptLead,ptTrail);
 	 higgsEtaHist[selection]->Fill(p.p4().eta());
 	 higgsPhiHist[selection]->Fill(p.p4().phi());
 	 higgsPHist[selection]->Fill(sqrt(p.p4().Vect().Dot(p.p4().Vect()))); //TO CHECK
 	 higgsPtHist[selection]->Fill(p.pt());
 	 ptLeadhisto[selection]->Fill(ptLead);
 	 ptTrailhisto[selection]->Fill(ptTrail);
-	 //Efficiency per bit
-	 for(int i=0;i<Nhltpaths;i++){
-	   Effbit[i][selection]->Fill(allHLTResults[i],ptLead,ptTrail);
-	 }
-	 Eff_bit_194_195_205[selection]->Fill(allHLTResults[194]+allHLTResults[195]+allHLTResults[205],ptLead,ptTrail);
 	 massHiggshisto[selection]->Fill(p.mass());
 	 Particle::LorentzVector diphoton = photon0->p4()+photon1->p4();
 	 massDiphotonhisto[selection]->Fill(sqrt(diphoton.Dot(diphoton)));
@@ -247,22 +246,11 @@ void HiggsGenHltRecoAnalyzer::beginJob(){
     higgsPhiHist[selection] = new TH1F (("higgsPhi_"+histo).c_str(),("GEN Higgs #phi_histo"+histo).c_str(),180,-3.15,3.15);
     higgsPHist[selection] = new TH1F (("higgsP_"+histo).c_str(),("GEN Higgs P_histo"+histo).c_str(),500,0,1200);
     higgsPtHist[selection] = new TH1F (("higgsPt_"+histo).c_str(),("GEN Higgs P_{T}_histo"+histo).c_str(),500,0,1200);  
-    numerator[selection] = new TH1F (("numerator_"+histo).c_str(),("numerator_histo"+histo).c_str(),Nhltpaths,-0.5,Nhltpaths-0.5);
-    denominator[selection] = new TH1F (("denominator_"+histo).c_str(),("denominator_histo"+histo).c_str(),Nhltpaths,-0.5,Nhltpaths-0.5);
-    const Double_t bins[15]={30,35,40,45,50,55,60,65,70,75,80,90,100,110,120};
-    char histo_name[128];
-    for(int i=0;i<Nhltpaths;i++){
-      std::string bin = std::to_string(i);
-      sprintf(histo_name,"bin%s",(bin+"_"+histo).c_str());
-      Effbit[i][selection]= new TEfficiency (histo_name,";p_T #gamma Lead;p_T #gamma Trail;#epsilon_",14,bins,14,bins);
-    }
-    
-    sprintf(histo_name,"Eff_bit_194_195_205_%d",selection);
-    Eff_bit_194_195_205[selection] = new TEfficiency (histo_name,(";p_T #gamma Lead;p_T #gamma Trail;#epsilon_"+histo).c_str(),14,bins,14,bins);
+    phi1phi2[selection] = new TH2F (("phi1phi2_"+histo).c_str(),"#phi correlation #gamma #gamma",180,-3.15,3.15,180,-3.15,3.15);
+    eta1eta2[selection] = new TH2F (("eta1eta2_"+histo).c_str(),"#eta correlation #gamma #gamma",100,-5,5,100,-5,5);
+    pt1pt2[selection] = new TH2F (("pt1pt2_"+histo).c_str(),"p_{T} correlation #gamma #gamma",100,20.,120.,100,20.,120.);
+    //const Double_t bins[15]={30,35,40,45,50,55,60,65,70,75,80,90,100,110,120};
   }
-  phi1phi2 = new TH2F ("phi1phi2","#phi correlation #gamma #gamma",180,-3.15,3.15,180,-3.15,3.15);
-  eta1eta2 = new TH2F ("eta1eta2","#eta correlation #gamma #gamma",100,-5,5,100,-5,5);
-  pt1pt2 = new TH2F ("pt1pt2","p_{T} correlation #gamma #gamma",100,20.,120.,100,20.,120.);
 }
 // ------------ method called once each job just after ending the event loop  ------------
 void 
@@ -275,24 +263,16 @@ HiggsGenHltRecoAnalyzer::endJob(){
     ptTrailhisto[selection]->Write();
     massDiphotonhisto[selection]->Write();
     massHiggshisto[selection]->Write();
-    numerator[selection]->Write();
-    denominator[selection]->Write();
+    occupancy[selection]->Write();
   
     higgsEtaHist[selection]->Write();
     higgsPhiHist[selection]->Write(); 
     higgsPHist[selection]->Write(); 
     higgsPtHist[selection]->Write();
-    for(int i=0;i<Nhltpaths;i++){
-      Effbit[i][selection]->SetTitle(arrayHLTpathsNames[i].c_str());
-      Effbit[i][selection]->Write();
-    }
-    Eff_bit_194_195_205[selection]->Write();
+    phi1phi2[selection]->Write();
+    eta1eta2[selection]->Write();
+    pt1pt2[selection]->Write();
   }
-  
-  phi1phi2->Write();
-  eta1eta2->Write();
-  pt1pt2->Write();
-  
   theFileOut->Close();
 }
 

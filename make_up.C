@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include <TEfficiency.h>
-//#define Maxselection 3
+//#define Maxselection 1
 //#define Nhltpaths 442
 
 void make_up(){
@@ -15,7 +15,7 @@ void make_up(){
   gStyle->SetPaintTextFormat("2.2f");
   
   //TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/higgs/yy/hlt/CMSSW_5_3_2_patch4/src/genAnalyzer/GenAnalyzer/genAnalyzer.root");
-  TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/higgs/yy/hlt/CMSSW_5_3_11/src/HiggsGenHltRecoAnalyzer/HiggsGenHltRecoAnalyzer/test/genAnalyzer.root");
+  TFile * theFile = new TFile("HiggsGenHltRecoAnalyzer/test/genAnalyzer.root");
   //TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/workspace/higgs/yy/all.root");
 
   system("mkdir gen");
@@ -51,42 +51,46 @@ void make_up(){
   //turnon curve
   //Interesting bits
   
-  string interesting_bits[]={"418","6","416","8","5","412","233","7","234","10","187","9","22","198","430","404","188","199","21","190","197","208","201","207","195","196","206","193","424","192","204","194","203","205","209","189","200","191"};
+  //  string interesting_bits[]={"418","6","416","8","5","412","233","7","234","10","187","9","22","198","430","404","188","199","21","190","197","208","201","207","195","196","206","193","424","192","204","194","203","205","209","189","200","191"};
   
   //string in_bits[]={"418","6"}
   //for(int k=0;k<2;k++){
   
-  for(int k=0;k<38;k++){//Efficiency w.r.t hlt/generator
-    //cout<<k<<endl;
-    TEfficiency * Effbit = (TEfficiency*) (theFile->Get(("bin"+interesting_bits[k]+"_1").c_str()));
-    if(!Effbit) cout<<"Effbit not found"<<endl;
-    binomialEfficiency2D(Effbit);
-    Ca0->SaveAs(("hlt/bit_"+interesting_bits[k]+"_"+Effbit->GetTitle()+"_efficiency.png").c_str());
-    Ca0->Clear();
-  }
+  //Definition for the interesting bits                                                                                                  
+  //0 gen                                                                                                                                
+  //1 acc                                                                                                                                
+  //2 194                                                                                                                                
+  //3 195                                                                                                                                
+  //4 205                                                                                                                                
+  //5 OR                                                                                                                                 
+  //6 OR*acc       
 
-  for(int k=0;k<38;k++){//efficiency hlt/acc = hlt/gen / acc/gen
-    //cout<<k<<endl;
-    TEfficiency * Effbit_num = (TEfficiency*) (theFile->Get(("bin"+interesting_bits[k]+"_1").c_str()));
-    TEfficiency * Effbit_den = (TEfficiency*) (theFile->Get(("bin"+interesting_bits[k]+"_2").c_str()));
-    if(!Effbit) cout<<"Effbit not found"<<endl;
-    renormalized_binomialEfficiency2D(Effbit_num,Effbit_den);
-    Ca0->SaveAs(("hlt/acc_bit_"+interesting_bits[k]+"_"+Effbit->GetTitle()+"_efficiency.png").c_str());
-    Ca0->Clear();
-  }
-
-  TEfficiency * EffbitOR = (TEfficiency*) (theFile->Get("Eff_bit_194_195_205_1"));
-  if(!EffbitOR) cout<<"EffbitOR not found"<<endl;
-  binomialEfficiency2D(EffbitOR);
-  Ca0->SaveAs("hlt/bitOR_efficiency.png");
-  Ca0->Clear();
-
-  TEfficiency * EffbitOR_den = (TEfficiency*) (theFile->Get("Eff_bit_194_195_205_2"));
-  if(!EffbitOR) cout<<"EffbitOR_den not found"<<endl;
-  renormalized_binomialEfficiency2D(EffbitOR,EffbitOR_den);
-  Ca0->SaveAs("hlt/acc_bitOR_efficiency.png");
+  TH2D * numerator  = (TH2D*) (theFile->Get(("pt1pt2_6").c_str()));
+  TH2D * denominator= (TH2D*) (theFile->Get(("pt1pt2_1").c_str()));
+  binomialEfficiency2D(numerator,denominator);
+  Ca0->SaveAs(("hlt/or_over_acc_efficiency.png").c_str());
   Ca0->Clear();
   
+  TH2D * numerator  = (TH2D*) (theFile->Get(("pt1pt2_4").c_str()));
+  TH2D * denominator= (TH2D*) (theFile->Get(("pt1pt2_1").c_str()));
+  binomialEfficiency2D(numerator,denominator);
+  Ca0->SaveAs(("hlt/205_over_acc_efficiency.png").c_str());
+  Ca0->Clear();
+
+  TH2D * numerator  = (TH2D*) (theFile->Get(("pt1pt2_3").c_str()));
+  TH2D * denominator= (TH2D*) (theFile->Get(("pt1pt2_1").c_str()));
+  binomialEfficiency2D(numerator,denominator);
+  Ca0->SaveAs(("hlt/195_over_acc_efficiency.png").c_str());
+  Ca0->Clear();
+
+  TH2D * numerator  = (TH2D*) (theFile->Get(("pt1pt2_2").c_str()));
+  TH2D * denominator= (TH2D*) (theFile->Get(("pt1pt2_1").c_str()));
+  binomialEfficiency2D(numerator,denominator);
+  Ca0->SaveAs(("hlt/194_over_acc_efficiency.png").c_str());
+  Ca0->Clear();
+  
+  //aca vamos falta mirar las otras distribuciones
+
   TH2F * phi1phi2 = (TH2F*)(theFile->Get("phi1phi2"));
   phi1phi2->Draw("colz");
   phi1phi2->SetXTitle("#phi_{Lead}");
@@ -108,10 +112,7 @@ void make_up(){
   exit(0);
 }
 
-void binomialEfficiency2D(TEfficiency * teff){
-  TH2D numerator = (TH2D)teff->GetPassedHistogram();
-  TH2D denominator = (TH2D)teff->GetTotalHistogram();
-  
+void binomialEfficiency2D(TH2D * numerator,TH2D * denominator){
   const Double_t bins[17]={20,25,30,35,40,45,50,55,60,65,70,75,80,90,100,110,120};
   TH2F * efficiency = new TH2F ("efficiency",teff->GetTitle(),16,bins,16,bins);
   efficiency->SetXTitle("E_{T} #gamma Lead");
