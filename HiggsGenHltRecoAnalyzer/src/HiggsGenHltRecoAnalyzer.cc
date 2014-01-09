@@ -44,7 +44,7 @@
 #include "TStyle.h"
 #include "TEfficiency.h"
 #define Nhltpaths 442
-#define Maxselection 2
+#define Maxselection 3
 
 using namespace std;
 using namespace edm;
@@ -186,11 +186,12 @@ HiggsGenHltRecoAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup
        if (photon1->pdgId()!=22) break; //must be photons
        
        fillhisto[0]=true;
-       fillhisto[1]=allHLTResults[194]+allHLTResults[195]+allHLTResults[205];
+       fillhisto[2]=allHLTResults[194]+allHLTResults[195]+allHLTResults[205];
        
        float ptLead = photon1->pt(); float ptTrail = photon0->pt();
        float phiLead = photon1->phi(); float phiTrail = photon0->phi();
        float etaLead = photon1->eta(); float etaTrail = photon0->eta();
+       
        if(ptTrail>ptLead){//invert if lead is not lead
 	 std::cout<<"lead was not lead"<<std::endl;
 	 ptLead = photon0->pt(); ptTrail = photon1->pt();  
@@ -198,6 +199,10 @@ HiggsGenHltRecoAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup
 	 etaLead = photon0->eta(); etaTrail = photon1->eta();
        }
 
+       if(etaLead > 2.5 || etaTrail > 2.5 
+	  || ( etaLead > 1.4442 && etaTrail < 1.566 ) 
+	  || ( etaTrail > 1.4442 && etaTrail < 1.566)) fillhisto[1]=false;
+       
        phi1phi2->Fill(phiLead,phiTrail);
        eta1eta2->Fill(etaLead,etaTrail);
        pt1pt2->Fill(ptLead,ptTrail);
