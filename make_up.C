@@ -15,7 +15,7 @@ void make_up(){
   gStyle->SetPaintTextFormat("2.2f");
   
   //TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/higgs/yy/hlt/CMSSW_5_3_2_patch4/src/genAnalyzer/GenAnalyzer/genAnalyzer.root");
-  TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/higgs/yy/hlt/CMSSW_5_3_11/src/HiggsGenHltRecoAnalyzer/HiggsGenHltRecoAnalyzer/test/genAnalyzer.root");
+  TFile * theFile = new TFile("HiggsGenHltRecoAnalyzer/test/genAnalyzer.root");
   //TFile * theFile = new TFile("/afs/cern.ch/user/c/carrillo/workspace/higgs/yy/all.root");
 
   system("mkdir gen");
@@ -71,7 +71,7 @@ void make_up(){
     TEfficiency * Effbit_den = (TEfficiency*) (theFile->Get(("bin"+interesting_bits[k]+"_2").c_str()));
     if(!Effbit) cout<<"Effbit not found"<<endl;
     renormalized_binomialEfficiency2D(Effbit_num,Effbit_den);
-    Ca0->SaveAs(("hlt/acc_bit_"+interesting_bits[k]+"_"+Effbit->GetTitle()+"_efficiency.png").c_str());
+    Ca0->SaveAs(("hlt/acc_bit_"+interesting_bits[k]+"_"+Effbit_num->GetTitle()+"_efficiency.png").c_str());
     Ca0->Clear();
   }
 
