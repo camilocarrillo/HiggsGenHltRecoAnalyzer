@@ -19,11 +19,10 @@
 
 
 // system include files
-#include <memory>
+//#include <memory>
 
 // user include files
 #include "FWCore/Framework/interface/EDAnalyzer.h"
-
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 
@@ -64,7 +63,6 @@ class HiggsGenHltRecoAnalyzer : public edm::EDAnalyzer {
       TH1F * ptTrailhisto[Maxselection];
       TH1F * massDiphotonhisto[Maxselection];
       TH1F * massHiggshisto[Maxselection];
-      TH1F * occupancy[Maxselection];
       TH1F * higgsEtaHist[Maxselection];
       TH1F * higgsPhiHist[Maxselection];
       TH1F * higgsPHist[Maxselection];
@@ -72,28 +70,22 @@ class HiggsGenHltRecoAnalyzer : public edm::EDAnalyzer {
       TH2F * phi1phi2[Maxselection];
       TH2F * eta1eta2[Maxselection];
       TH2F * pt1pt2[Maxselection];
-      TH2F * fine_pt1pt2[Maxselection];
-      TH2F * occupancy_bit[Maxselection];
+      TH2F * wide_pt1pt2[Maxselection];
+      const Double_t bins[15]={30,35,40,45,50,55,60,65,70,75,80,90,100,110,120};
       bool fillhisto[Maxselection];
       string arrayHLTpathsNames[Nhltpaths];
       bool filled_hlt_names; 
-
       int selection;   
    private:
       virtual void beginJob() ;
       virtual void analyze(const edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
-
       virtual void beginRun(edm::Run const&, edm::EventSetup const&);
       virtual void endRun(edm::Run const&, edm::EventSetup const&);
       virtual void beginLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
       virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&);
       edm::InputTag theGenParticleLabel;
       edm::InputTag theHltInputLabel;
-
-
-  
-      
       // ----------member data ---------------------------
 };
 
@@ -108,22 +100,16 @@ class HiggsGenHltRecoAnalyzer : public edm::EDAnalyzer {
 //
 // constructors and destructor
 //
-HiggsGenHltRecoAnalyzer::HiggsGenHltRecoAnalyzer(const edm::ParameterSet& iConfig)
-
-{
+HiggsGenHltRecoAnalyzer::HiggsGenHltRecoAnalyzer(const edm::ParameterSet& iConfig){
    //now do what ever initialization is needed
   theGenParticleLabel = iConfig.getParameter<edm::InputTag>("GenParticleLabel");
   theHltInputLabel    = iConfig.getParameter<edm::InputTag>("hltInputTag");
-
 }
 
 
-HiggsGenHltRecoAnalyzer::~HiggsGenHltRecoAnalyzer()
-{
- 
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
-
+HiggsGenHltRecoAnalyzer::~HiggsGenHltRecoAnalyzer(){
+  // do anything here that needs to be done at desctruction time
+  // (e.g. close files, deallocate resources etc.)
 }
 
 //
@@ -217,6 +203,7 @@ HiggsGenHltRecoAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup
 	 phi1phi2[selection]->Fill(phiLead,phiTrail);
 	 eta1eta2[selection]->Fill(etaLead,etaTrail);
 	 pt1pt2[selection]->Fill(ptLead,ptTrail);
+	 wide_pt1pt2[selection]->Fill(ptLead,ptTrail);
 	 higgsEtaHist[selection]->Fill(p.p4().eta());
 	 higgsPhiHist[selection]->Fill(p.p4().phi());
 	 higgsPHist[selection]->Fill(sqrt(p.p4().Vect().Dot(p.p4().Vect()))); //TO CHECK
@@ -249,22 +236,19 @@ void HiggsGenHltRecoAnalyzer::beginJob(){
     phi1phi2[selection] = new TH2F (("phi1phi2_"+histo).c_str(),"#phi correlation #gamma #gamma",180,-3.15,3.15,180,-3.15,3.15);
     eta1eta2[selection] = new TH2F (("eta1eta2_"+histo).c_str(),"#eta correlation #gamma #gamma",100,-5,5,100,-5,5);
     pt1pt2[selection] = new TH2F (("pt1pt2_"+histo).c_str(),"p_{T} correlation #gamma #gamma",100,20.,120.,100,20.,120.);
-    //const Double_t bins[15]={30,35,40,45,50,55,60,65,70,75,80,90,100,110,120};
+    wide_pt1pt2[selection]= new TH2F (("wide_pt1pt2_"+histo).c_str(),";p_T #gamma Lead;p_T #gamma Trail;#epsilon_",14,bins,14,bins);
   }
 }
 // ------------ method called once each job just after ending the event loop  ------------
 void 
 HiggsGenHltRecoAnalyzer::endJob(){
-
+  std::cout<<"beginning endJob"<<std::endl;
   theFileOut->cd();
-
   for(selection=0;selection<Maxselection;selection++){ //Loop over the different histograms
     ptLeadhisto[selection]->Write();
     ptTrailhisto[selection]->Write();
     massDiphotonhisto[selection]->Write();
     massHiggshisto[selection]->Write();
-    occupancy[selection]->Write();
-  
     higgsEtaHist[selection]->Write();
     higgsPhiHist[selection]->Write(); 
     higgsPHist[selection]->Write(); 
@@ -272,6 +256,8 @@ HiggsGenHltRecoAnalyzer::endJob(){
     phi1phi2[selection]->Write();
     eta1eta2[selection]->Write();
     pt1pt2[selection]->Write();
+    std::cout<<"Writing wide_pt1pt2"<<std::endl;
+    wide_pt1pt2[selection]->Write();
   }
   theFileOut->Close();
 }
