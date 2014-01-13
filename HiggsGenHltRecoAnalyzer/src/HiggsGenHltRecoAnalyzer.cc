@@ -63,15 +63,15 @@ class HiggsGenHltRecoAnalyzer : public edm::EDAnalyzer {
       TH1F * ptTrailhisto[Maxselection];
       TH1F * massDiphotonhisto[Maxselection];
       TH1F * massHiggshisto[Maxselection];
-      TH1F * higgsEtaHist[Maxselection];
-      TH1F * higgsPhiHist[Maxselection];
-      TH1F * higgsPHist[Maxselection];
-      TH1F * higgsPtHist[Maxselection];
+      TH1F * higgsEta[Maxselection];
+      TH1F * higgsPhi[Maxselection];
+      TH1F * higgsP[Maxselection];
+      TH1F * higgsPt[Maxselection];
       TH2F * phi1phi2[Maxselection];
       TH2F * eta1eta2[Maxselection];
       TH2F * pt1pt2[Maxselection];
       TH2F * wide_pt1pt2[Maxselection];
-      const Double_t bins[15]={30,35,40,45,50,55,60,65,70,75,80,90,100,110,120};
+      const Double_t bins[17]={20,25,30,35,40,45,50,55,60,65,70,75,80,90,100,110,120};
       bool fillhisto[Maxselection];
       string arrayHLTpathsNames[Nhltpaths];
       bool filled_hlt_names; 
@@ -142,8 +142,6 @@ HiggsGenHltRecoAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup
      filled_hlt_names=true;
      //std::cout<<arrayHLTpathsNames.size()<<std::endl;
    }
-
-   
    int hltCount= hltTriggerResultHandle->size();
    bool fillhisto[Maxselection] = { false };
    bool allHLTResults[Nhltpaths] = { false };
@@ -182,37 +180,50 @@ HiggsGenHltRecoAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup
 	 etaLead = photon0->eta(); etaTrail = photon1->eta();
        
        }
+
+       std::cout<<"fillhisto1 ";
+       for(selection=0;selection<Maxselection;selection++)
+	 std::cout<<fillhisto[selection]<<" ";
+       std::cout<<std::endl;
+
        //Definition for the interesting bits
        //0 gen
        //1 acc
-       //2 194
-       //3 195
-       //4 205
-       //5 OR
-       //6 OR*acc
+       //2 194*acc
+       //3 195*acc
+       //4 205*acc
+       //5 OR*acc
+       //6 OR*acc ???????
        fillhisto[0]=true; //all gen level
-       fillhisto[1]=!(etaLead > 2.5 || etaTrail > 2.5 || (etaLead > 1.4442 && etaLead < 1.566) || (etaTrail > 1.4442 && etaTrail < 1.566));
-       fillhisto[2]=allHLTResults[194];
-       fillhisto[3]=allHLTResults[195];
-       fillhisto[4]=allHLTResults[205];
-       fillhisto[5]=fillhisto[2]+fillhisto[3]+fillhisto[4];
-       fillhisto[6]=fillhisto[5]*fillhisto[1];
+       fillhisto[1]=!(fabs(etaLead) > 2.5 || fabs(etaTrail) > 2.5 || (fabs(etaLead) > 1.4442 && fabs(etaLead) < 1.566) || (fabs(etaTrail) > 1.4442 && fabs(etaTrail) < 1.566)); //acceptnace cuts
+       fillhisto[2]=allHLTResults[194]&&fillhisto[1];
+       fillhisto[3]=allHLTResults[195]&&fillhisto[1];
+       fillhisto[4]=allHLTResults[205]&&fillhisto[1];
+       fillhisto[5]=(allHLTResults[194]||allHLTResults[195]||allHLTResults[205])&&fillhisto[1];
+       fillhisto[6]=(fillhisto[2]||fillhisto[3]||fillhisto[4])&&fillhisto[1];
 
+       std::cout<<"fillhisto2 ";
+       for(selection=0;selection<Maxselection;selection++)
+	 std::cout<<fillhisto[selection]<<" ";
+       std::cout<<std::endl;
+	   
+       
        for(selection=0;selection<Maxselection;selection++){ //Loop over the different histograms
-	 if(!fillhisto[selection]) break; //all hitograms below will be filled up if the boolean is true.
-	 phi1phi2[selection]->Fill(phiLead,phiTrail);
-	 eta1eta2[selection]->Fill(etaLead,etaTrail);
-	 pt1pt2[selection]->Fill(ptLead,ptTrail);
-	 wide_pt1pt2[selection]->Fill(ptLead,ptTrail);
-	 higgsEtaHist[selection]->Fill(p.p4().eta());
-	 higgsPhiHist[selection]->Fill(p.p4().phi());
-	 higgsPHist[selection]->Fill(sqrt(p.p4().Vect().Dot(p.p4().Vect()))); //TO CHECK
-	 higgsPtHist[selection]->Fill(p.pt());
-	 ptLeadhisto[selection]->Fill(ptLead);
-	 ptTrailhisto[selection]->Fill(ptTrail);
-	 massHiggshisto[selection]->Fill(p.mass());
-	 Particle::LorentzVector diphoton = photon0->p4()+photon1->p4();
-	 massDiphotonhisto[selection]->Fill(sqrt(diphoton.Dot(diphoton)));
+	 if(fillhisto[selection]){ //all hitograms below will be filled up if the boolean is true.
+	   phi1phi2[selection]->Fill(phiLead,phiTrail);
+	   eta1eta2[selection]->Fill(etaLead,etaTrail);
+	   pt1pt2[selection]->Fill(ptLead,ptTrail);
+	   wide_pt1pt2[selection]->Fill(ptLead,ptTrail);
+	   higgsEta[selection]->Fill(p.p4().eta());
+	   higgsPhi[selection]->Fill(p.p4().phi());
+	   higgsP[selection]->Fill(sqrt(p.p4().Vect().Dot(p.p4().Vect()))); //TO CHECK
+	   higgsPt[selection]->Fill(p.pt());
+	   ptLeadhisto[selection]->Fill(ptLead);
+	   ptTrailhisto[selection]->Fill(ptTrail);
+	   massHiggshisto[selection]->Fill(p.mass());
+	   Particle::LorentzVector diphoton = photon0->p4()+photon1->p4();
+	   massDiphotonhisto[selection]->Fill(sqrt(diphoton.Dot(diphoton)));
+	 }
        }
      }
    }
@@ -220,23 +231,21 @@ HiggsGenHltRecoAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup
 
 void HiggsGenHltRecoAnalyzer::beginJob(){
   filled_hlt_names=false;
-
   theFileOut = new TFile("genAnalyzer.root", "RECREATE");
-
   for(selection=0;selection<Maxselection;selection++){ //Loop over the different histograms
     std::string histo = std::to_string(selection);
     ptLeadhisto[selection] = new TH1F (("ptLead_"+histo).c_str(),("ptLeadhisto_"+histo).c_str(),100,0.,150.);
     ptTrailhisto[selection] = new TH1F (("ptTrail_"+histo).c_str(),("ptTrailhisto_"+histo).c_str(),100,0.,150.);
     massDiphotonhisto[selection] = new TH1F (("massDiphoton_"+histo).c_str(),("massDiphotonhisto_"+histo).c_str(),100,80.,150.);
     massHiggshisto[selection]= new TH1F (("massHiggs_"+histo).c_str(),("massHiggshisto_"+histo).c_str(),100,80.,170.);
-    higgsEtaHist[selection] = new TH1F (("higgsEta_"+histo).c_str(),("GEN Higgs #eta_histo"+histo).c_str(),100,-5,5);
-    higgsPhiHist[selection] = new TH1F (("higgsPhi_"+histo).c_str(),("GEN Higgs #phi_histo"+histo).c_str(),180,-3.15,3.15);
-    higgsPHist[selection] = new TH1F (("higgsP_"+histo).c_str(),("GEN Higgs P_histo"+histo).c_str(),500,0,1200);
-    higgsPtHist[selection] = new TH1F (("higgsPt_"+histo).c_str(),("GEN Higgs P_{T}_histo"+histo).c_str(),500,0,1200);  
+    higgsEta[selection] = new TH1F (("higgsEta_"+histo).c_str(),("Higgs #eta_histo"+histo).c_str(),100,-5,5);
+    higgsPhi[selection] = new TH1F (("higgsPhi_"+histo).c_str(),("Higgs #phi_histo"+histo).c_str(),180,-3.15,3.15);
+    higgsP[selection] = new TH1F (("higgsP_"+histo).c_str(),("Higgs P_histo"+histo).c_str(),500,0,1200);
+    higgsPt[selection] = new TH1F (("higgsPt_"+histo).c_str(),("Higgs P_{T}_histo"+histo).c_str(),500,0,1200);
     phi1phi2[selection] = new TH2F (("phi1phi2_"+histo).c_str(),"#phi correlation #gamma #gamma",180,-3.15,3.15,180,-3.15,3.15);
     eta1eta2[selection] = new TH2F (("eta1eta2_"+histo).c_str(),"#eta correlation #gamma #gamma",100,-5,5,100,-5,5);
     pt1pt2[selection] = new TH2F (("pt1pt2_"+histo).c_str(),"p_{T} correlation #gamma #gamma",100,20.,120.,100,20.,120.);
-    wide_pt1pt2[selection]= new TH2F (("wide_pt1pt2_"+histo).c_str(),";p_T #gamma Lead;p_T #gamma Trail;#epsilon_",14,bins,14,bins);
+    wide_pt1pt2[selection]= new TH2F (("wide_pt1pt2_"+histo).c_str(),";p_T #gamma Lead;p_T #gamma Trail;#epsilon_",17-1,bins,17-1,bins);
   }
 }
 // ------------ method called once each job just after ending the event loop  ------------
@@ -249,10 +258,10 @@ HiggsGenHltRecoAnalyzer::endJob(){
     ptTrailhisto[selection]->Write();
     massDiphotonhisto[selection]->Write();
     massHiggshisto[selection]->Write();
-    higgsEtaHist[selection]->Write();
-    higgsPhiHist[selection]->Write(); 
-    higgsPHist[selection]->Write(); 
-    higgsPtHist[selection]->Write();
+    higgsEta[selection]->Write();
+    higgsPhi[selection]->Write(); 
+    higgsP[selection]->Write(); 
+    higgsPt[selection]->Write();
     phi1phi2[selection]->Write();
     eta1eta2[selection]->Write();
     pt1pt2[selection]->Write();

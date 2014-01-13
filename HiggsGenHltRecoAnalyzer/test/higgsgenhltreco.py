@@ -7,7 +7,7 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 import FWCore.Utilities.FileUtils as FileUtils
-mylist = FileUtils.loadListFromFile('90.txt')
+mylist = FileUtils.loadListFromFile('130.txt')
 process.source = cms.Source("PoolSource",fileNames =
 cms.untracked.vstring( *mylist ))
 
