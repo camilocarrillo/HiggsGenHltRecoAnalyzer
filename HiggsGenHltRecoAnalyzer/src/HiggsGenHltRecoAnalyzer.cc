@@ -71,7 +71,7 @@ class HiggsGenHltRecoAnalyzer : public edm::EDAnalyzer {
       TH2F * eta1eta2[Maxselection];
       TH2F * pt1pt2[Maxselection];
       TH2F * wide_pt1pt2[Maxselection];
-      const Double_t bins[17]={20,25,30,35,40,45,50,55,60,65,70,75,80,90,100,110,120};
+      const Double_t bins[19]={5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,90,100,110};
       bool fillhisto[Maxselection];
       string arrayHLTpathsNames[Nhltpaths];
       bool filled_hlt_names; 
@@ -234,18 +234,18 @@ void HiggsGenHltRecoAnalyzer::beginJob(){
   theFileOut = new TFile("genAnalyzer.root", "RECREATE");
   for(selection=0;selection<Maxselection;selection++){ //Loop over the different histograms
     std::string histo = std::to_string(selection);
-    ptLeadhisto[selection] = new TH1F (("ptLead_"+histo).c_str(),("ptLeadhisto_"+histo).c_str(),100,0.,150.);
-    ptTrailhisto[selection] = new TH1F (("ptTrail_"+histo).c_str(),("ptTrailhisto_"+histo).c_str(),100,0.,150.);
-    massDiphotonhisto[selection] = new TH1F (("massDiphoton_"+histo).c_str(),("massDiphotonhisto_"+histo).c_str(),100,80.,150.);
-    massHiggshisto[selection]= new TH1F (("massHiggs_"+histo).c_str(),("massHiggshisto_"+histo).c_str(),100,80.,170.);
+    ptLeadhisto[selection] = new TH1F (("ptLead_"+histo).c_str(),("ptLeadhisto_"+histo).c_str(),100,0.,120.);
+    ptTrailhisto[selection] = new TH1F (("ptTrail_"+histo).c_str(),("ptTrailhisto_"+histo).c_str(),100,0.,120.);
+    massDiphotonhisto[selection] = new TH1F (("massDiphoton_"+histo).c_str(),("massDiphotonhisto_"+histo).c_str(),100,80.,180.);
+    massHiggshisto[selection]= new TH1F (("massHiggs_"+histo).c_str(),("massHiggshisto_"+histo).c_str(),100,80.,180.);
     higgsEta[selection] = new TH1F (("higgsEta_"+histo).c_str(),("Higgs #eta_histo"+histo).c_str(),100,-5,5);
     higgsPhi[selection] = new TH1F (("higgsPhi_"+histo).c_str(),("Higgs #phi_histo"+histo).c_str(),180,-3.15,3.15);
     higgsP[selection] = new TH1F (("higgsP_"+histo).c_str(),("Higgs P_histo"+histo).c_str(),500,0,1200);
     higgsPt[selection] = new TH1F (("higgsPt_"+histo).c_str(),("Higgs P_{T}_histo"+histo).c_str(),500,0,1200);
     phi1phi2[selection] = new TH2F (("phi1phi2_"+histo).c_str(),"#phi correlation #gamma #gamma",180,-3.15,3.15,180,-3.15,3.15);
     eta1eta2[selection] = new TH2F (("eta1eta2_"+histo).c_str(),"#eta correlation #gamma #gamma",100,-5,5,100,-5,5);
-    pt1pt2[selection] = new TH2F (("pt1pt2_"+histo).c_str(),"p_{T} correlation #gamma #gamma",100,20.,120.,100,20.,120.);
-    wide_pt1pt2[selection]= new TH2F (("wide_pt1pt2_"+histo).c_str(),";p_T #gamma Lead;p_T #gamma Trail;#epsilon_",17-1,bins,17-1,bins);
+    pt1pt2[selection] = new TH2F (("pt1pt2_"+histo).c_str(),"p_{T} correlation #gamma #gamma",100,0.,110.,100,0.,110.);
+    wide_pt1pt2[selection]= new TH2F (("wide_pt1pt2_"+histo).c_str(),";p_T #gamma Lead;p_T #gamma Trail;#epsilon_",19-1,bins,19-1,bins);
   }
 }
 // ------------ method called once each job just after ending the event loop  ------------
