@@ -5,6 +5,8 @@
 #include <vector>
 #include <string>
 #include <TEfficiency.h>
+#include "TLegend"
+
 //#define Maxselection 1
 //#define Nhltpaths 442
 
@@ -36,7 +38,6 @@ void make_up(){
   Draw1D("higgsP","#p (GeV)","gen/",theFile); 
 
   
-  
   //turnon curve
   //Interesting bits
   
@@ -57,37 +58,60 @@ void make_up(){
 
   TH2F * numerator;
   TH2F * denominator;
-  
   cout<<"going for 2D"<<endl;
+
   numerator  = (TH2F*) (theFile->Get("wide_pt1pt2_5"));
   denominator= (TH2F*) (theFile->Get("wide_pt1pt2_1"));
   cout<<"calling binomial efficiency 5/1 ="<<numerator->GetEntries()/denominator->GetEntries()<<endl;
-  binomialEfficiency2D(numerator,denominator);
-  cout<<"saving image"<<endl;
+  binomialEfficiency2D(numerator,denominator,true);
   Ca0->SaveAs(("hlt/or_over_acc_efficiency.png"));
+  Ca0->Clear();
+  binomialEfficiency2D(numerator,denominator,false);
+  Ca0->SaveAs(("hlt/eff_wide_pt1pt2.png"));
   Ca0->Clear();
   
   numerator  = (TH2F*) (theFile->Get("wide_pt1pt2_4"));
   denominator= (TH2F*) (theFile->Get("wide_pt1pt2_1"));
   cout<<"calling binomial efficiency 4/1 ="<<numerator->GetEntries()/denominator->GetEntries()<<endl;
-  binomialEfficiency2D(numerator,denominator);
+  binomialEfficiency2D(numerator,denominator,true);
   Ca0->SaveAs(("hlt/205_over_acc_efficiency.png"));
   Ca0->Clear();
   
   numerator  = (TH2F*) (theFile->Get("wide_pt1pt2_3"));
   denominator= (TH2F*) (theFile->Get("wide_pt1pt2_1"));
   cout<<"calling binomial efficiency 3/1 ="<<numerator->GetEntries()/denominator->GetEntries()<<endl;
-  binomialEfficiency2D(numerator,denominator);
+  binomialEfficiency2D(numerator,denominator,true);
   Ca0->SaveAs(("hlt/195_over_acc_efficiency.png"));
   Ca0->Clear();
   
   numerator  = (TH2F*) (theFile->Get("wide_pt1pt2_2"));
   denominator= (TH2F*) (theFile->Get("wide_pt1pt2_1"));
   cout<<"calling binomial efficiency 2/1 ="<<numerator->GetEntries()/denominator->GetEntries()<<endl;
-  binomialEfficiency2D(numerator,denominator);
+  binomialEfficiency2D(numerator,denominator,true);
   Ca0->SaveAs(("hlt/194_over_acc_efficiency.png"));
   Ca0->Clear();
   
+  numerator  = (TH2F*) (theFile->Get("pt1pt2_5"));
+  denominator= (TH2F*) (theFile->Get("pt1pt2_1"));
+  cout<<"calling binomial efficiency 5/1 ="<<numerator->GetEntries()/denominator->GetEntries()<<endl;
+  binomialEfficiency2D(numerator,denominator,false);
+  Ca0->SaveAs(("hlt/eff_pt1pt2.png"));
+  Ca0->Clear();
+
+  numerator  = (TH2F*) (theFile->Get("eta1eta2_5"));
+  denominator= (TH2F*) (theFile->Get("eta1eta2_1"));
+  cout<<"calling binomial efficiency 5/1 ="<<numerator->GetEntries()/denominator->GetEntries()<<endl;
+  binomialEfficiency2D(numerator,denominator,false);
+  Ca0->SaveAs(("hlt/eff_eta1eta2.png"));
+  Ca0->Clear();
+
+  numerator  = (TH2F*) (theFile->Get("phi1phi2_5"));
+  denominator= (TH2F*) (theFile->Get("phi1phi2_1"));
+  cout<<"calling binomial efficiency 5/1 ="<<numerator->GetEntries()/denominator->GetEntries()<<endl;
+  binomialEfficiency2D(numerator,denominator,false);
+  Ca0->SaveAs(("hlt/eff_phi1phi2.png"));
+  Ca0->Clear();
+
   Draw2D("wide_pt1pt2","p_{T} Lead (GeV)","p_{T} Trail (GeV)","gen/",theFile);
   Draw2D("phi1phi2","#phi_{Lead}","#phi_{Trail}","gen/",theFile);
   Draw2D("eta1eta2","#eta_{Lead}","#eta_{Trail}","gen/",theFile);
@@ -161,11 +185,10 @@ void binomialEfficiency1D(TH1F * numerator,TH1F * denominator){
   TH1F * efficiency = numerator->Clone("efficiency");
   efficiency->SetXTitle(numerator->GetXaxis()->GetTitle());
   efficiency->SetYTitle("#epsilon");
-  float eff,err;
   for(int j=0;j<=numerator->GetXaxis()->GetNbins() ;j++){
-    if(denominator.GetBinContent(j)!=0){
-      eff = numerator.GetBinContent(j)/denominator.GetBinContent(j);
-      err = sqrt(eff*(1-eff)/denominator.GetBinContent(j));
+    if(denominator->GetBinContent(j)!=0){
+      float eff = numerator->GetBinContent(j)/denominator->GetBinContent(j);
+      float err = sqrt(eff*(1-eff)/denominator->GetBinContent(j));
       efficiency->SetBinContent(j,eff);
       efficiency->SetBinError(j,err);
       cout<<"1Deff "<<j<<" "<<eff<<" +/- "<<err<<endl;
@@ -178,6 +201,9 @@ void binomialEfficiency1D(TH1F * numerator,TH1F * denominator){
 }
       
 void Draw1D(string savedname,string theXtitle,string folder,TFile * theFile){
+  
+  TLegend *leg = new TLegend(0.65,0.93,0.89,0.7);
+  
   TH1F * histoArray[7  ];
   for(int selection=0;selection<7  ;selection++){ //Loop over the different histograms
     //std::string histo = std::to_string(selection);
@@ -188,26 +214,32 @@ void Draw1D(string savedname,string theXtitle,string folder,TFile * theFile){
     if(selection==0){
       histoArray[selection]->Draw();
       histoArray[selection]->SetFillColor(kBlue);
+      leg->AddEntry(histoArray[selection],"GEN","f");
     }else if(selection==1){
       histoArray[selection]->Draw("same");
       histoArray[selection]->SetFillColor(kRed);
+      leg->AddEntry(histoArray[selection],"ACC","f");
     }else if(selection==5){
       histoArray[selection]->Draw("same");
       histoArray[selection]->SetFillColor(kYellow);
+      leg->AddEntry(histoArray[selection],"ACCxHLT","f");
     }
     histoArray[selection]->SetXTitle(theXtitle.c_str());
     histoArray[selection]->SetMinimum(0);
   }
+  
+  
+  leg->SetFillColor(0);
+  leg->Draw("same");
+  
   Ca0->SaveAs((folder+savedname+".png").c_str());
   Ca0->Clear();
 }
 
-void binomialEfficiency2D(TH2F * numerator,TH2F * denominator){
+void binomialEfficiency2D(TH2F * numerator,TH2F * denominator,bool text2D){
   if(!numerator) cout<<"numerator not found"<<endl;
   if(!denominator) cout<<"denominator not found"<<endl;
-  //const Double_t bins[17]={20,25,30,35,40,45,50,55,60,65,70,75,80,90,100,110,120};
-  //TH2F * efficiency = new TH2F ("efficiency",numerator->GetTitle(),17-1,bins,17-1,bins);
-  
+
   TH1F * efficiency = numerator->Clone("efficiency");
   
   efficiency->SetXTitle(numerator->GetXaxis()->GetTitle());
@@ -215,7 +247,7 @@ void binomialEfficiency2D(TH2F * numerator,TH2F * denominator){
   
   float eff,err;
   for(int i=0;i<=numerator->GetXaxis()->GetNbins();i++)
-    for(int j=0;j<=numerator->GetYaxis()->GetNbins();j++){//cambiar . por ->
+    for(int j=0;j<=numerator->GetYaxis()->GetNbins();j++){
       if(denominator->GetBinContent(i,j)!=0){
 	eff = numerator->GetBinContent(i,j)/denominator->GetBinContent(i,j);
 	err = sqrt(eff*(1-eff)/denominator->GetBinContent(i,j));
@@ -224,7 +256,12 @@ void binomialEfficiency2D(TH2F * numerator,TH2F * denominator){
 	cout<<i<<" "<<j<<" "<<eff<<"+/-"<<err<<endl;
       }
     }
-  efficiency->Draw("colztextE");
+  if(text2D==true){
+    efficiency->Draw("colztextE");
+    //efficiency->Draw("colz");
+  }else{
+    efficiency->Draw("colz");
+  }
 }
 
 void Draw2D(string savedname,string theXtitle,string theYtitle,string folder,TFile * theFile){
